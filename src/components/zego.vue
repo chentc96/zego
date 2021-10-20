@@ -22,6 +22,15 @@ export default {
 		return {
 			videoStream: null,
 			audioStream: null,
+			streamConfig: {
+				videoQuality: 4, // 质量模式
+				width: 1920, // 分辨率宽
+				height: 1080, // 分辨率高
+				frameRate: 60, // 帧率
+				bitrate: 2000, // 码率
+				startBitrate: 'target', // 开始码率
+				videoOptimizationMode: 'detail', // 视频优化模式
+			},
 		}
 	},
 	created () {
@@ -50,22 +59,24 @@ export default {
 					// 与房间连接断开
 					this.updateRoom({
 						count: 'reduce',
-						publish: false,
+						publish: 'false',
 					})
 				}
 			})
 			// 用户状态更新回调
 			zg.on('roomUserUpdate', (roomID, updateType, userList) => {
-				console.warn(
-					`roomUserUpdate: room ${roomID}, user ${updateType}`,
-					JSON.stringify(userList)
-				)
+				console.warn('roomUserUpdate：', updateType)
+				if (updateType === 'ADD') {
+					// 用户新增
+				} else if(updateType == 'DELETE') {
+					// 用户减少
+				}
 			})
 			// 流状态更新回调
 			zg.on('roomStreamUpdate', async (roomID, updateType, streamList, extendedData) => {
 				console.warn('roomStreamUpdate：', updateType)
 				if (updateType == 'ADD') {
-					// 流新增，开始拉流
+					// 流新增
 					if (client) {
 						this.startPlayingStream(streamList[0]['streamID'])
 						this.startPlayingStream(streamList[1]['streamID'])
@@ -73,7 +84,7 @@ export default {
 						this.startPlayingStream(streamList[0]['streamID'])
 					}
 				} else if (updateType == 'DELETE') {
-					// 流删除，停止拉流
+					// 流减少
 					extendedData = JSON.parse(extendedData)
 					if (!client) {
 						this.updateRoom({
@@ -94,7 +105,7 @@ export default {
 					console.warn('正在推流')
 					if (!client) {
 						this.updateRoom({
-							publish: true,
+							publish: 'true',
 						})
 					}
 				} else if (state === 'NO_PUBLISH') {
@@ -164,20 +175,17 @@ export default {
 		},
 		async createVideoStream () {
 			console.log('开始创建视频流')
-			var { streamID, videoCodec } = this
+			var { streamID, videoCodec, streamConfig } = this
 			try {
 				var stream = await zg.createStream({
 					screen: {
 						audio: true,
-						width: 1920,
-						height: 1080,
-						frameRate: 120,
-						bitrate: 6000,
+						...streamConfig,
 					}
 				})
 				zg.startPublishingStream(streamID, stream, { videoCodec })
 				this.videoStream = stream
-				console.warn('创建视频流成功')
+				console.warn('创建视频流成功：', stream)
 				return true
 			} catch (err) {
 				console.error('创建视频流成功：', err)
@@ -186,17 +194,17 @@ export default {
 		},
 		async createAudioStream () {
 			console.log('开始创建音频流')
-			var { streamID } = this
+			var { streamID, streamConfig } = this
 			try {
 				var stream = await zg.createStream({
 					camera: {
 						video: false,
-						audio: true,
+						...streamConfig,
 					},
 				})
 				zg.startPublishingStream(`${streamID}audio`, stream)
 				this.audioStream = stream
-				console.warn('创建音频流成功')
+				console.warn('创建音频流成功：', stream)
 				return true
 			} catch (err) {
 				console.error('创建音频流失败：', err)
@@ -207,8 +215,12 @@ export default {
 			console.log('开始拉流')
 			try {
 				var stream = await zg.startPlayingStream(streamID)
-				this.$emit('start', stream)
-				console.warn('拉流成功')
+				if (streamID.indexOf('audio') > -1) {
+					this.$emit('audio', stream)
+				} else {
+					this.$emit('video', stream)
+				}
+				console.warn('拉流成功：', stream)
 				return true
 			} catch (err) {
 				console.error('拉流失败：', err)

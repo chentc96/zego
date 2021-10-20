@@ -4,7 +4,7 @@
 			<zego
 				ref="zego"
 				:streamID="userID" :roomID="roomID" :userID="userID" :userName="userName"
-				@start="start" @stop="stop"
+				@audio="getAudio" @stop="stop"
 			/>
 			<audio ref="audio" loop preload autoplay playsinline controls/>
 			<button @click="hangUp">退出房间</button>
@@ -27,7 +27,7 @@ export default {
 		}
 	},
 	methods: {
-		start (e) {
+		getAudio (e) {
 			this.$refs.audio.srcObject = e
 		},
 		stop () {

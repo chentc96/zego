@@ -4,9 +4,10 @@
 			<zego
 				ref="zego" client
 				:streamID="userID" :roomID="roomID" :userID="userID" :userName="userName"
-				@start="start" @stop="stop"
+				@video="getVideo" @audio="getAudio" @stop="stop"
 			/>
 			<video ref="video" autoplay playsinline></video>
+			<audio ref="audio" loop preload autoplay playsinline controls hidden/>
 		</div>
 	</div>
 </template>
@@ -26,11 +27,15 @@ export default {
 		}
 	},
 	methods: {
-		start (e) {
+		getVideo (e) {
 			this.$refs.video.srcObject = e
+		},
+		getAudio (e) {
+			this.$refs.audio.srcObject = e
 		},
 		stop () {
 			this.$refs.video.srcObject = null
+			this.$refs.audio.srcObject = null
 		},
 		hangUp () {
 			this.$refs.zego.hangUp()

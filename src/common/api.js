@@ -1,5 +1,5 @@
-var baseURL = 'https://test.vr.com:4433/'
-
+// var baseURL = 'https://test.vr.com:4433/'
+var baseURL = 'https://kf.v2.vr.api.taobao.top/'
 export default {
 	baseURL,
 	getToken: `${baseURL}index/index/gettoken`, // 获取zg推拉流token

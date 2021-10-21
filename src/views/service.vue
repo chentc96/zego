@@ -1,14 +1,12 @@
 <template>
-  <div>
-		<div>
-			<zego
-				ref="zego"
-				:streamID="userID" :roomID="roomID" :userID="userID" :userName="userName"
-				@audio="getAudio" @stop="stop"
-			/>
-			<audio ref="audio" loop preload autoplay playsinline controls/>
-			<button @click="hangUp">退出房间</button>
-		</div>
+  <div class="service-page">
+		<zego
+			ref="zego"
+			:streamID="userID" :roomID="roomID" :userID="userID" :userName="userName"
+			@audio="getAudio" @stop="stop"
+		/>
+		<audio ref="audio" loop preload autoplay playsinline controls/>
+		<button @click="hangUp">退出房间</button>
 	</div>
 </template>
 
@@ -21,6 +19,7 @@ export default {
 	},
 	data () {
 		return {
+			mineID: '1',
 			roomID: '5',
 			userID: '1',
 			userName: '1',

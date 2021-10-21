@@ -1,10 +1,10 @@
 <template>
   <div class="customer-page">
-		<!-- <zego
+		<zego
 			ref="zego" client
 			:streamID="userID" :roomID="roomID" :userID="userID" :userName="userName"
 			@video="getVideo" @audio="getAudio" @stop="stop"
-		/> -->
+		/>
 		<tc-popup
 			title="Leaving VR to watch Mine"
 			msg="You will leave VR to watch Mine. Do you want to continue?"
@@ -37,12 +37,12 @@
 </template>
 
 <script>
-// import zego from '@/components/zego.vue'
+import zego from '@/components/zego.vue'
 export default {
 	name: 'Customer',
-	// components: {
-	// 	zego,
-	// },
+	components: {
+		zego,
+	},
 	data () {
 		return {
 			show: false,

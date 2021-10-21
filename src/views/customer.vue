@@ -45,7 +45,7 @@ export default {
 	// },
 	data () {
 		return {
-			show: true,
+			show: false,
 			mineID: '1',
 			roomID: '5',
 			userID: '453',

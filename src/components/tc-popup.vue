@@ -1,24 +1,28 @@
 <template>
-	<div class="tc-popup" :class="mode" v-if="value">
-		<!-- <transition class="tc-popup-main" :show="value" :mode-class="modeClass"> -->
-		<div class="tc-popup-main">
-			<tc-icons class="tc-popup-close" v-if="close" :image="require('@/assets/img/close.png')" size="16" @click="onClose(false)"/>
-			<div class="tc-popup-ctn">
-				<slot>
+	<transition name="fade">
+		<div class="tc-popup" :class="mode" v-if="value">
+			<div class="tc-popup-main">
+				<tc-icons
+					class="tc-popup-close"
+					v-if="close"
+					:image="require('@/assets/img/close.png')"
+					size="16"
+					@click="onClose(false)"
+				/>
+				<slot name="title">
 					<div class="tc-popup_tit" v-if="mode !== 'sticky' && title">{{title}}</div>
 				</slot>
 				<slot>
 					<div class="tc-popup_msg">{{msg}}</div>
 				</slot>
+				<div class="tc-popup-btn" v-if="mode === 'center'">
+					<div class="tc-popup_cancel" v-if="cancel" @click="onClose(false)">{{cancel}}</div>
+					<div class="tc-popup_confirm" v-if="confirm" @click="onClose(true)">{{confirm}}</div>
+				</div>
 			</div>
-			<div class="tc-popup-btn" v-if="mode === 'center'">
-				<div class="tc-popup_cancel" v-if="cancel" @click="onClose(false)">{{cancel}}</div>
-				<div class="tc-popup_confirm" v-if="confirm" @click="onClose(true)">{{confirm}}</div>
-			</div>
-			</div>
-		<!-- </transition> -->
-		<div class="tc-popup-mask" @click="mask && onClose(false)"></div>
-	</div>
+			<div class="tc-popup-mask" @click="mask && onClose(false)"></div>
+		</div>
+	</transition>
 </template>
 
 <script>
@@ -69,6 +73,12 @@
 </script>
 
 <style lang="scss" scoped>
+.fade-enter-active, .fade-leave-active {
+	transition: opacity .5s
+}
+.fade-enter, .fade-leave-active {
+	opacity: 0
+}
 .tc-popup {
 	position: fixed;
 	top: 0;
@@ -91,23 +101,21 @@
 			top: 10px;
 			right: 10px;
 		}
-		.tc-popup-ctn {
-			.tc-popup_tit {
-				font-family: SFUIDisplay, SFUIDisplay-Bold;
-				font-size: 18px;
-				font-weight: 700;
-				padding: 10px 0 10px 4px;
-				width: 94%;
-				margin: 0 auto;
-				border-bottom: 1px solid #979797;
-			}
-			.tc-popup_msg {
-				font-family: PingFangSC, PingFangSC-Semibold;
-				font-size: 14px;
-				font-weight: 600;
-				text-align: center;
-				padding: 25px 0;
-			}
+		.tc-popup_tit {
+			font-family: SFUIDisplay, SFUIDisplay-Bold;
+			font-size: 18px;
+			font-weight: 700;
+			padding: 10px 0 10px 4px;
+			width: 94%;
+			margin: 0 auto;
+			border-bottom: 1px solid #979797;
+		}
+		.tc-popup_msg {
+			font-family: PingFangSC, PingFangSC-Semibold;
+			font-size: 14px;
+			font-weight: 600;
+			text-align: center;
+			padding: 25px 0;
 		}
 		.tc-popup-btn {
 			display: flex;

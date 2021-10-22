@@ -1,5 +1,5 @@
 <template>
-  <div class="service-page">
+  <div class="sim-page">
 		<audio ref="audio" loop preload autoplay playsinline controls/>
 		<button @click="logoutRoom">退出房间</button>
 	</div>

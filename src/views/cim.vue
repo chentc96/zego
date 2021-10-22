@@ -1,5 +1,5 @@
 <template>
-  <div class="customer-page">
+  <div class="cim-page">
 		<tc-popup
 			title="Leaving VR to watch Mine"
 			msg="You will leave VR to watch Mine. Do you want to continue?"
@@ -10,12 +10,12 @@
 		<iframe v-show="!playing" :src="`/pano2vr/${mineID}/`"/>
 		<video v-show="playing" ref="video" autoplay playsinline/>
 		<audio ref="audio" loop preload autoplay playsinline controls hidden/>
-		<div class="customer-main">
+		<div class="cim-main">
 			<div>
 				<tc-icons :image="require('@/assets/img/out.png')" size="38" space="8" :imageClass="{
 					'border-radius': '50%',
 				}">
-					<div class="customer-main_info">
+					<div class="cim-main_info">
 						<div>Jarry</div>
 						<div>customer service</div>
 					</div>
@@ -182,7 +182,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.customer-page {
+.cim-page {
 	iframe,
 	video {
 		position: absolute;
@@ -197,7 +197,7 @@ export default {
 	video {
 		background-color: #000;
 	}
-	.customer-main {
+	.cim-main {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -212,7 +212,7 @@ export default {
 		border: 6px solid rgba(255, 255, 255, 0.20);
 		border-radius: 4px;
 		min-width: 810px;
-		.customer-main_info {
+		.cim-main_info {
 			& > div:first-child {
 				font-family: SFUIDisplay, SFUIDisplay-Semibold;
 				font-size: 18px;

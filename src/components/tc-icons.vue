@@ -1,22 +1,22 @@
 <template>
 	<div
 		class="tc-icons"
+		:class="align"
 		:style="{
 			'color': value ? colorOn : color,
 		}"
 		@click="onClick"
 	>
-		<img
-			:style="{
+		<div
+		 :style="{
 				[`margin-${align}`]: `${space}px`,
 				width: `${size}px`,
 				height: `${size}px`,
 				...imageClass,
 			}"
-			:src="src"
-			alt="icons"
-			@error="onErr"
-		/>
+		>
+			<img :src="src" alt="icons" @error="onErr"/>
+		</div>
 		<div><slot/></div>
 	</div>
 </template>
@@ -85,6 +85,10 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	img {
+		width: 100%;
+		height: 100%;
+	}
 }
 .left {
 	flex-direction: row-reverse;

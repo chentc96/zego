@@ -4,6 +4,7 @@ import router from './router'
 import axios from 'axios'
 import http from '@/common/http.js'
 import utils from '@/common/utils.js'
+import filters from '@/common/filters.js'
 import icons from '@/components/tc-icons.vue'
 import popup from '@/components/tc-popup.vue'
 
@@ -13,6 +14,10 @@ Vue.component('tc-popup', popup)
 Vue.prototype.$axios = axios
 Vue.prototype.$http = http
 Vue.prototype.$utils = utils
+
+Object.keys(filters).forEach(key => {
+  Vue.filter(key, filters[key])
+})
 
 new Vue({
   router,

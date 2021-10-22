@@ -12,11 +12,11 @@
 		<audio ref="audio" loop preload autoplay playsinline controls hidden/>
 		<div class="cim-main">
 			<div>
-				<tc-icons :image="require('@/assets/img/out.png')" size="38" space="8" :imageClass="{
+				<tc-icons :image="require('@/assets/img/pic.png')" size="38" space="8" :imageClass="{
 					'border-radius': '50%',
 				}">
 					<div class="cim-main_info">
-						<div>Jarry</div>
+						<div>Jarry <span class="status">离线</span></div>
 						<div>customer service</div>
 					</div>
 				</tc-icons>
@@ -198,6 +198,7 @@ export default {
 		background-color: #000;
 	}
 	.cim-main {
+		font-family: SFUIDisplay, SFUIDisplay-Regular;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -212,25 +213,16 @@ export default {
 		border: 6px solid rgba(255, 255, 255, 0.20);
 		border-radius: 4px;
 		min-width: 810px;
+		font-size: 18px;
 		.cim-main_info {
 			& > div:first-child {
 				font-family: SFUIDisplay, SFUIDisplay-Semibold;
-				font-size: 18px;
 				font-weight: 600;
 			}
 			& > div:last-child {
-				font-family: SFUIDisplay, SFUIDisplay-Regular;
 				font-size: 12px;
 				opacity: 0.6;
 			}
-		}
-		& > div:nth-child(1) {
-
-		}
-		& > div:nth-child(2),
-		& > div:nth-child(3) {
-			font-family: SFUIDisplay, SFUIDisplay-Regular;
-			font-size: 18px;
 		}
 	}
 }

@@ -1,11 +1,12 @@
 export default {
 	formatTime (time) {
-	    let m = Math.floor(time % 3600 / 60)
-	    let s = Math.floor(time % 3600 % 60)
-	    return `${`0${m}`.slice(-2)}:${`0${s}`.slice(-2)}`
-	}, // 格式化时间
+			var hour = parseInt((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+			var minute = parseInt((time % (1000 * 60 * 60)) / (1000 * 60))
+			var second = (time % (1000 * 60)) / 1000
+	    return `${`0${hour}`.slice(-2)}:${`0${minute}`.slice(-2)}:${`0${second}`.slice(-2)}`
+	}, // 格式化时间（ms）
 	formatDate (time, format = 'YYYY-MM-DD hh:mm:ss') {
-		let date = new Date(time),
+		var date = new Date(time),
 			year = date.getFullYear(),
 			month = date.getMonth() + 1,
 			day = date.getDate(),
@@ -19,5 +20,5 @@ export default {
 		.replace('hh', `0${hour}`.slice(-2))
 		.replace('mm', `0${minute}`.slice(-2))
 		.replace('ss', `0${second}`.slice(-2))
-	}, // 格式化日期
+	}, // 格式化日期（ms）
 }

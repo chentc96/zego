@@ -43,9 +43,12 @@
 			</div>
 		</div>
 		<div class="sim-footer">
-			<div class="sim-footer_time">常看次数：<span>120</span> 平均时长：<span>30分钟</span></div>
+			<!-- <div class="sim-footer_time">常看次数：<span>120</span> 平均时长：<span>30分钟</span></div> -->
 			<div class="sim-footer_list">
-				
+				<el-table :data="tableData" height="280" border :header-cell-style="{ backgroundColor: '#EEE' }">
+					<el-table-column label="序号" type="index" width="80" align="center"/>
+					<el-table-column v-for="(v, k, i) in rowData" :key="i" :prop="k" :label="v" align="center"/>
+				</el-table>
 			</div>
 			<!-- <div class="sim-footer_tips">备注：若用户自己退出VR带看，则系统自动保存语音（格式为：客户ID+进入房间时间）到客服的统计数据列表中</div> -->
 		</div>
@@ -54,6 +57,7 @@
 
 <script>
 import zego from '@/common/zego.js'
+import filter from '@/common/filter.js'
 export default {
 	name: 'Sim',
 	data () {
@@ -67,18 +71,44 @@ export default {
 				userID: '1',
 				userName: '1',
 			},
+			rowData: {
+				userName: '用户名',
+				userId: '用户ID',
+				on: '进入房间时间',
+				out: '离开房间时间',
+				stay: '停留时长',
+			},
+			tableData: [
+				// {
+    //       userName: '111',
+    //       userId: '111',
+    //       on: 1634897009036,
+    //       out: 1634897039036,
+    //     },
+			]
 		}
 	},
 	created () {
 		var { info } = this
 		var { roomID, token } = this.$route.query
-		// zego.init(info)
-		// .then(zg => {
-		// 	this.zg = zg
-		// 	this.loginRoom()
-		// })
+		zego.init(info)
+		.then(zg => {
+			this.zg = zg
+			this.loginRoom()
+		})
+		// this.setData()
 	},
 	methods: {
+		setData () {
+			this.tableData = this.tableData.map(item => {
+				return {
+					...item,
+					on: filter.formatDate(item.on),
+					out: filter.formatDate(item.out),
+					stay: filter.formatTime(item.out - item.on),
+				}
+			})
+		},
 		onPlay () {
 			var { playing } = this
 			this.playing = playing
@@ -292,7 +322,6 @@ export default {
 		}
 		.sim-footer_list {
 			background-color: #EEE;
-			height: 247px;
 			margin: 10px 0;
 		}
 		.sim-footer_tips {

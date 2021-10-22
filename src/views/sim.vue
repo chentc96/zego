@@ -78,14 +78,14 @@ export default {
 				console.warn('roomStateUpdate：', state)
 				if (state == 'CONNECTED') {
 					// 与房间连接成功
-					Promise.all([
-						zego.createVideoStream(),
-						zego.createAudioStream(),
-					])
+					zego.createVideoStream()
 					.then(() => {
-						this.startPushStream()
-						this.updateRoom({
-							count: 'add',
+						zego.createAudioStream()
+						.then(() => {
+							this.startPushStream()
+							this.updateRoom({
+								count: 'add',
+							})
 						})
 					})
 				} else if (state == 'DISCONNECTED') {

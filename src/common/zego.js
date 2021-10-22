@@ -96,7 +96,7 @@ async function loginRoom () {
 			return Promise.resolve()
 		} catch (err) {
 			console.error('登录失败：', err)
-			return Promise.reject()
+			return Promise.reject(err)
 		}
 	})
 }
@@ -116,7 +116,7 @@ async function createVideoStream () {
 		return Promise.resolve(stream)
 	} catch (err) {
 		console.error('创建视频流失败：', err)
-		return Promise.reject(stream)
+		return Promise.reject(err)
 	}
 }
 
@@ -135,7 +135,7 @@ async function createAudioStream () {
 		return Promise.resolve(stream)
 	} catch (err) {
 		console.error('创建音频流失败：', err)
-		return Promise.reject(stream)
+		return Promise.reject(err)
 	}
 }
 

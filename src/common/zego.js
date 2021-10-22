@@ -1,5 +1,4 @@
 import $axios from 'axios'
-import $http from './http.js'
 import { ZegoExpressEngine } from 'zego-express-engine-webrtc'
 
 const appID = 1760679314
@@ -19,7 +18,6 @@ var videoStream = null
 var audioStream = null
 var zg = null
 var info = {
-	client: false,
 	streamID: '',
 	roomID: '',
 	userID: '',
@@ -27,13 +25,16 @@ var info = {
 	videoCodec: 'VP8',
 }
 
-function init (data) {
-	return new Promise((resolve, reject) => {
-		Object.assign(info, data)
-		zg = new ZegoExpressEngine(appID, server)
-		checkSystem()
-		.then(res => !res ?resolve(zg) :reject(flag))
-	})
+async function init (data) {
+	console.log('开始初始化')
+	Object.assign(info, data)
+	zg = new ZegoExpressEngine(appID, server)
+	var result = await checkSystem()
+	if (!result) {
+		console.warn('初始化成功')
+		return Promise.resolve(zg)
+	}
+	return Promise.reject(result)
 }
 
 async function checkSystem () {
@@ -56,11 +57,11 @@ async function checkSystem () {
 		// 	console.error('camera not allowed to use')
 		// 	return 'camera not allowed to use'
 		// }
-		// else if (!result.microphones) {
-		// 	// 浏览器不允许使用麦克风
-		// 	console.error('microphones not allowed to use')
-		// 	return 'microphones not allowed to use'
-		// }
+		else if (!result.microphone) {
+			// 浏览器不允许使用麦克风
+			console.error('microphone not allowed to use')
+			return 'microphones not allowed to use'
+		}
 		else if (!result.screenSharing) {
 			// 浏览器不支持屏幕共享
 			console.error('browser is not support screenSharing')
@@ -73,10 +74,10 @@ async function checkSystem () {
 	}
 }
 
-function loginRoom () {
+async function loginRoom () {
 	console.log('开始登录')
 	var { roomID, userID, userName } = info
-	$axios({
+	await $axios({
 		url: tokenUrl,
 		params: {
 			app_id: appID,
@@ -91,17 +92,18 @@ function loginRoom () {
 			}, {
 				userUpdate: true,
 			})
-			initEvent()
 			console.warn('登录成功')
+			return Promise.resolve()
 		} catch (err) {
 			console.error('登录失败：', err)
+			return Promise.reject()
 		}
 	})
 }
 
 async function createVideoStream () {
 	console.log('开始创建视频流')
-	var { streamID, videoCodec, streamConfig } = info
+	var { streamConfig } = info
 	try {
 		var stream = await zg.createStream({
 			screen: {
@@ -111,15 +113,16 @@ async function createVideoStream () {
 		})
 		videoStream = stream
 		console.warn('创建视频流成功：', stream)
-		return stream
+		return Promise.resolve(stream)
 	} catch (err) {
-		console.error('创建视频流成功：', err)
+		console.error('创建视频流失败：', err)
+		return Promise.reject(stream)
 	}
 }
 
 async function createAudioStream () {
 	console.log('开始创建音频流')
-	var { streamID, streamConfig } = info
+	var { streamConfig } = info
 	try {
 		var stream = await zg.createStream({
 			camera: {
@@ -129,16 +132,19 @@ async function createAudioStream () {
 		})
 		audioStream = stream
 		console.warn('创建音频流成功：', stream)
-		return stream
+		return Promise.resolve(stream)
 	} catch (err) {
 		console.error('创建音频流失败：', err)
+		return Promise.reject(stream)
 	}
 }
 
-function startPublishingStream (streamID, stream) {
+function startPublishingStream (streamID, isAudio) {
+	var { videoCodec } = info
+	var stream = isAudio ? audioStream : videoStream
 	console.log('开始推流：', streamID)
 	try {
-		zg.startPublishingStream(streamID, stream)
+		zg.startPublishingStream(streamID, stream, { videoCodec })
 		console.warn('推流成功：', stream)
 		return stream
 	} catch (err) {
@@ -146,11 +152,11 @@ function startPublishingStream (streamID, stream) {
 	}
 }
 
-function stopPublishingStream (streamID, stream) {
+function stopPublishingStream (streamID) {
 	console.log('开始停止推流：', streamID)
 	try {
-		zg.stopPublishingStream(streamID, stream)
-		console.warn('停止推流成功：', stream)
+		zg.stopPublishingStream(streamID)
+		console.warn('停止推流成功')
 		return stream
 	} catch (err) {
 		console.error('停止推流失败：', err)
@@ -178,22 +184,9 @@ function stopPlayingStream (streamID) {
 	}
 }
 
-function updateRoom (data) {
-	console.log('开始更新房间')
-	var { roomID, userID, userName } = info
-	$http.updateRoom({
-		room_id: roomID,
-		user_id: userID,
-		user_name: userName,
-		...data,
-	})
-	.then(({ data }) => {
-		console.warn('更新房间：', data.msg)
-	})
-}
-
 function logoutRoom () {
-	var { roomID, streamID } = info
+	console.log('推出房间')
+	var { roomID } = info
 	zg.destroyStream(videoStream)
 	zg.destroyStream(audioStream)
 	zg.logoutRoom(roomID)
@@ -208,6 +201,5 @@ export default {
 	stopPublishingStream,
 	startPlayingStream,
 	stopPlayingStream,
-	updateRoom,
 	logoutRoom,
 }

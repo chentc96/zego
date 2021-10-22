@@ -5,19 +5,19 @@ Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/',
-    name: 'Home',
+    name: 'Vr',
+    path: '/vr/:mineId',
     component: () => import('@/views/index.vue')
   },
   {
-    path: '/customer',
-    name: 'Customer',
-    component: () => import('@/views/customer.vue')
+    name: 'Cim',
+    path: '/cim',
+    component: () => import('@/views/cim.vue')
   },
   {
-    path: '/service',
-    name: 'Service',
-    component: () => import('@/views/service.vue')
+    name: 'Sim',
+    path: '/sim',
+    component: () => import('@/views/sim.vue')
   },
 ]
 

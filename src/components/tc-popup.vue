@@ -7,7 +7,7 @@
 					v-if="close"
 					:image="require('@/assets/img/close.png')"
 					size="16"
-					@click="onClose(false)"
+					@click="$emit('input', false)"
 				/>
 				<slot name="title">
 					<div class="tc-popup_tit" v-if="mode !== 'sticky' && title">{{title}}</div>
@@ -16,11 +16,19 @@
 					<div class="tc-popup_msg">{{msg}}</div>
 				</slot>
 				<div class="tc-popup-btn" v-if="mode === 'center'">
-					<div class="tc-popup_cancel" v-if="cancel" @click="onClose(false)">{{cancel}}</div>
-					<div class="tc-popup_confirm" v-if="confirm" @click="onClose(true)">{{confirm}}</div>
+					<div
+						class="tc-popup_cancel"
+						v-if="cancelText"
+						@click="cancel"
+					>{{cancelText}}</div>
+					<div
+						class="tc-popup_confirm"
+						v-if="confirmText"
+						@click="confirm"
+					>{{confirmText}}</div>
 				</div>
 			</div>
-			<div class="tc-popup-mask" @click="mask && onClose(false)"></div>
+			<div class="tc-popup-mask" @click="mask && $emit('input', false)"></div>
 		</div>
 	</transition>
 </template>
@@ -41,11 +49,11 @@
 				type: String / Boolean,
 				default: '提示'
 			},
-			cancel: {
+			cancelText: {
 				type: String / Boolean,
 				default: '取消'
 			},
-			confirm: {
+			confirmText: {
 				type: String / Boolean,
 				default: '确定'
 			},
@@ -64,10 +72,14 @@
 			}
 		},
 		methods: {
-			onClose (flag) {
+			cancel () {
 				this.$emit('input', false)
-				this.$emit('click', flag)
-			}
+				this.$emit('cancel')
+			},
+			confirm () {
+				this.$emit('input', false)
+				this.$emit('confirm')
+			},
 		}
 	}
 </script>

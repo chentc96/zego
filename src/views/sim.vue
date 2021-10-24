@@ -1,51 +1,64 @@
 <template>
   <div class="sim-page">
-		<!-- <audio ref="audio" loop preload autoplay playsinline controls/>
-		<button @click="logoutRoom">退出房间</button> -->
+		<audio ref="audio" loop preload autoplay playsinline controls hidden/>
 		<div class="sim-header">
-			<div class="sim-header_pic">
-				<img src="@/assets/img/view.png" alt="pic">
-			</div>
+			<!-- <el-image class="sim-header_pic" :src="require('@/assets/img/view.png')" fit="contain"/> -->
 			<div class="sim-header_info">
-				<div class="header-info_name">bitmine Mine 01</div>
+				<div class="header-info_name">{{mineInfo.name}}</div>
 				<div>
 					<tc-icons :image="require('@/assets/img/pic.png')" size="36" space="10" :imageClass="{
 						'border-radius': '50%',
 					}">
 						<div class="header-info_serve">
-							<div>Jarry <span class="status">离线</span></div>
-							<div>customer service</div>
+							<div>{{info.userName}}</div>
+							<div>
+								<el-tag v-if="isLogin" type="success" size="mini">在线</el-tag>
+								<el-tag v-else type="danger" size="mini">离线</el-tag>
+							</div>
 						</div>
 					</tc-icons>
 				</div>
-				<div class="header-info_time">2021-10-12 12:15:00 至 2021-10-12 13:30:30</div>
+				<!-- <div class="header-info_time">2021-10-12 12:15:00 至 2021-10-12 13:30:30</div> -->
 			</div>
 		</div>
 		<div class="sim-centre">
 			<div class="sim-centre_state">正在通话</div>
-			<div class="sim-centre_time">00:12:49</div>
+			<div class="sim-centre_time">{{time | formatTime}}</div>
 			<div class="sim-centre_audio">
 				
 			</div>
 			<div class="sim-centre_active">
 				<tc-icons
-					:image="require('@/assets/img/pause.png')"
-					:imageOn="require('@/assets/img/play.png')"
+					:disabled="!zg"
+					:image="require('@/assets/img/login.png')"
+					:imageOn="require('@/assets/img/logout.png')"
 					size="62" space="12" align="bottom"
-					colorOn="#1E9FFF"
-					v-model="playing"
+					:value="isLogin"
+					@click="onLogin"
+				>{{isLogin ? '退出' :'登录'}}</tc-icons>
+				<tc-icons
+					:style="{ 'visibility': isLogin ? '' : 'hidden'}"
+					:disabled="!streamList.length"
+					:image="require('@/assets/img/answer.png')"
+					:imageOn="require('@/assets/img/hangup.png')"
+					size="62" space="12" align="bottom"
+					:value="isPlay"
 					@click="onPlay"
-				>{{playing ? '暂停' :'开始'}}</tc-icons>
-				<!-- <tc-icons
-					:image="require('@/assets/img/save.png')"
-					size="62" space="12" align="bottom"
-				>保存</tc-icons> -->
+				>{{isPlay ? '挂断' :'接听'}}</tc-icons>
+				<tc-icons
+					:style="{ 'visibility': isPlay ? '' : 'hidden'}"
+					:image="require('@/assets/img/record.png')"
+					:imageOn="require('@/assets/img/record_on.png')"
+					size="42" space="12" align="bottom"
+					v-model="isMute"
+					@click="onMute"
+				>静音</tc-icons>
 			</div>
 		</div>
 		<div class="sim-footer">
 			<!-- <div class="sim-footer_time">常看次数：<span>120</span> 平均时长：<span>30分钟</span></div> -->
 			<div class="sim-footer_list">
-				<el-table :data="tableData" height="280" border :header-cell-style="{ backgroundColor: '#EEE' }">
+				<el-table :data="userList" height="280" border :header-cell-style="{ backgroundColor: '#EEE' }">
 					<el-table-column label="序号" type="index" width="80" align="center"/>
 					<el-table-column v-for="(v, k, i) in rowData" :key="i" :prop="k" :label="v" align="center"/>
 				</el-table>
@@ -57,100 +70,134 @@
 
 <script>
 import zego from '@/common/zego.js'
-import filter from '@/common/filter.js'
+var interval = null
 export default {
 	name: 'Sim',
 	data () {
 		return {
-			token: '',
-			playing: false,
 			zg: null,
-			info: {
-				roomID: '5',
-				streamID: '1',
-				userID: '1',
-				userName: '1',
-			},
+			isLogin: false,
+			isPlay: false,
+			isMute: false,
+			token: '',
+			time: 0,
+			mineInfo: {},
+			custInfo: {},
+			info: {},
+			streamList: [],
+			userList: [],
 			rowData: {
 				userName: '用户名',
-				userId: '用户ID',
-				on: '进入房间时间',
-				out: '离开房间时间',
+				userID: '用户ID',
+				start: '进入房间时间',
+				end: '离开房间时间',
 				stay: '停留时长',
 			},
-			tableData: [
-				// {
-    //       userName: '111',
-    //       userId: '111',
-    //       on: 1634897009036,
-    //       out: 1634897039036,
-    //     },
-			]
 		}
 	},
 	created () {
-		var { info } = this
-		var { roomID, token } = this.$route.query
-		zego.init(info)
-		.then(zg => {
-			this.zg = zg
-			this.loginRoom()
-		})
-		// this.setData()
+		var { token, roomID } = this.$route.query
+		this.token = token
+		this.verify(roomID)
+	},
+	watch: {
+		isPlay (n) {
+			this.setInterval(n)
+		}
 	},
 	methods: {
-		setData () {
-			this.tableData = this.tableData.map(item => {
-				return {
-					...item,
-					on: filter.formatDate(item.on),
-					out: filter.formatDate(item.out),
-					stay: filter.formatTime(item.out - item.on),
+		setData (flag) {
+			if (flag) {
+				this.custInfo.start = new Date().getTime()
+				return
+			}
+			this.custInfo.end = new Date().getTime()
+			var { custInfo } = this
+			this.userList.push({
+				...custInfo,
+				start: this.$filter.formatDate(custInfo.start),
+				end: this.$filter.formatDate(custInfo.end),
+				stay: this.$filter.formatTime((custInfo.end - custInfo.start) / 1000),
+			})
+		},
+		setInterval (flag) {
+			if (flag) {
+				this.setData(true)
+				interval = setInterval(() => {
+					this.time += 1
+				}, 1000)
+				return
+			}
+			clearInterval(interval)
+			this.setData()
+			this.time = 0
+		},
+		onLogin (flag) {
+			if (flag) {
+				zego.loginRoom()
+				this.updateRoom({
+					count: 'add',
+					publish: 'true',
+				})
+				.then(() => this.isLogin = flag)
+			} else {
+				if (this.isPlay) this.onPlay()
+				zego.logoutRoom()
+				this.updateRoom({
+					count: 'reduce',
+					publish: 'false',
+				})
+				.then(() => this.isLogin = flag)
+			}
+		},
+		onPlay (flag) {
+			if (flag) {
+				this.pushVideoStream(true)
+				this.pushAudioStream(true)
+				this.pullAudioStream(true)
+			} else {
+				this.pushVideoStream()
+				this.pushAudioStream()
+				this.pullAudioStream()
+				this.streamList = []
+			}
+		},
+		onMute (flag) {
+			var { zg } = this
+			this.isMute = flag
+			flag
+				? zg.muteMicrophone(true)
+				: zg.muteMicrophone()
+		},
+		pushVideoStream (flag) {
+			var { info } = this
+			flag
+			 ? zego.startPublishingStream(info.streamID)
+			 : zego.stopPublishingStream(info.streamID)
+		},
+		pushAudioStream (flag) {
+			var { info } = this
+			flag
+			 ? zego.startPublishingStream(`${info.streamID}audio`, true)
+			 : zego.stopPublishingStream(`${info.streamID}audio`)
+		},
+		pullAudioStream (flag) {
+			var { streamList } = this
+			streamList.forEach(item => {
+				var { streamID } = item
+				if (streamID.indexOf('audio') > -1) {
+					if (flag) {
+						zego.startPlayingStream(streamID)
+						.then(stream => {
+							this.$refs.audio.srcObject = stream
+							this.isPlay = true
+						})
+					} else {
+						zego.stopPlayingStream(streamID)
+						this.$refs.audio.srcObject = null
+						this.isPlay = false
+					}
 				}
-			})
-		},
-		onPlay () {
-			var { playing } = this
-			this.playing = playing
-		},
-		loginRoom () {
-			zego.loginRoom()
-			.then(() => {
-				this.initEvent()
-			})
-		},
-		logoutRoom: zego.logoutRoom,
-		startPushStream () {
-			var { info } = this
-			zego.startPublishingStream(info.streamID)
-			zego.startPublishingStream(`${info.streamID}audio`, true)
-		},
-		stopPushStream () {
-			var { info } = this
-			zego.stopPublishingStream(info.streamID)
-			zego.stopPublishingStream(`${info.streamID}audio`)
-		},
-		startPullStream (streamID) {
-			zego.startPlayingStream(streamID)
-			.then(stream => {
-				this.$refs.audio.srcObject = stream
-			})
-		},
-		stopPullStream (vSID, aSID) {
-			zego.stopPlayingStream(vSID)
-			zego.stopPlayingStream(aSID)
-		},
-		updateRoom (data) {
-			console.log('开始更新房间')
-			var { roomID, userID, userName } = this.info
-			this.$http.updateRoom({
-				room_id: roomID,
-				user_id: userID,
-				user_name: userName,
-				...data,
-			})
-			.then(({ data }) => {
-				console.warn('更新房间：', data.msg)
 			})
 		},
 		initEvent () {
@@ -158,23 +205,14 @@ export default {
 			// 房间状态更新回调
 			zg.on('roomStateUpdate', (roomID, state, errorCode) => {
 				console.warn('roomStateUpdate：', state)
-				if (state == 'CONNECTED') {
+				if (state === 'CONNECTED') {
 					// 与房间连接成功
 					zego.createVideoStream()
 					.then(() => {
 						zego.createAudioStream()
-						.then(() => {
-							this.startPushStream()
-							this.updateRoom({
-								count: 'add',
-							})
-						})
 					})
-				} else if (state == 'DISCONNECTED') {
-					// 与房间连接断开
-					this.updateRoom({
-						count: 'reduce',
-						publish: 'false',
+					.catch(() => {
+						this.onLogin(false)
 					})
 				}
 			})
@@ -184,48 +222,56 @@ export default {
 				console.log(userList)
 				if (updateType === 'ADD') {
 					// 用户新增
-				} else if(updateType == 'DELETE') {
+					this.custInfo = userList[0]
+				} else if (updateType === 'DELETE') {
 					// 用户减少
+					this.custInfo = {}
 				}
 			})
 			// 流状态更新回调
 			zg.on('roomStreamUpdate', async (roomID, updateType, streamList) => {
 				console.warn('roomStreamUpdate：', updateType)
 				console.log(streamList)
-				if (updateType == 'ADD') {
+				if (updateType === 'ADD') {
 					// 流新增
-					this.startPullStream(streamList[0]['streamID'])
-				} else if (updateType == 'DELETE') {
+					this.streamList = streamList
+				} else if (updateType === 'DELETE') {
 					// 流减少
-					this.stopPullStream(streamList[0]['streamID'])
-					this.updateRoom({
-						count: 'reduce',
-						room_id: roomID,
-						user_id: streamList[0]['user']['userID'],
-						user_name: streamList[0]['user']['userName'],
-					})
+					this.onPlay()
 				}
 			})
-			// 推流状态更新回调
-			zg.on('publisherStateUpdate', ({ state }) => {
-				console.warn('publisherStateUpdate：', state)
-				if (state === 'PUBLISHING') {
-					// 正在推流
-					this.updateRoom({
-						publish: 'true',
-					})
-				} else if (state === 'NO_PUBLISH') {
-					// 未推流
-				}
+		},
+		updateRoom (data) {
+			console.log('开始更新房间')
+			var { roomID, userID, userName } = this.info
+			return this.$http.updateRoom({
+				room_id: roomID,
+				user_id: userID,
+				user_name: userName,
+				...data,
 			})
-			// 拉流状态更新回调
-			zg.on('playerStateUpdate', ({ state }) => {
-				console.warn('playerStateUpdate：', state)
-				if (state === 'PLAYING') {
-					// 正在拉流
-				} else if (state === 'NO_PLAY') {
-					// 未拉流
+		},
+		verify (roomID) {
+			console.log('开始获取用户信息')
+			var { token } = this
+			this.$http.verify({
+				room_id: roomID,
+				token,
+			})
+			.then(({ user, mine }) => {
+				var { id, name } = user
+				this.mineInfo = mine
+				this.info = {
+					roomID,
+					streamID: id,
+					userID: id,
+					userName: name,
 				}
+				zego.init(this.info)
+				.then(res => {
+					this.zg = res
+					this.initEvent()
+				})
 			})
 		},
 	}
@@ -234,10 +280,6 @@ export default {
 
 <style lang="scss" scoped>
 .sim-page {
-	img {
-		width: 100%;
-		height: 100%;
-	}
 	.sim-header {
 		padding: 14px 24px 20px;
 		background-color: #FFF;
@@ -262,6 +304,7 @@ export default {
 				color: #1f1f1f;
 			}
 			.header-info_serve {
+				line-height: 26px;
 				& > div:first-child {
 					font-family: SFUIDisplay, SFUIDisplay-Bold;
 					font-size: 18px;
@@ -307,6 +350,9 @@ export default {
 			font-family: PingFangSC, PingFangSC-Regular;
 			font-size: 14px;
 			color: #757575;
+			& > div {
+				margin: 0 10px;
+			}
 		}
 	}
 	.sim-footer {

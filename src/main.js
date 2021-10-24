@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import axios from 'axios'
 import http from '@/common/http.js'
 import utils from '@/common/utils.js'
 import filter from '@/common/filter.js'
@@ -13,9 +12,9 @@ import 'element-ui/lib/theme-chalk/index.css'
 Vue.config.productionTip = false
 Vue.component('tc-icons', icons)
 Vue.component('tc-popup', popup)
-Vue.prototype.$axios = axios
 Vue.prototype.$http = http
 Vue.prototype.$utils = utils
+Vue.prototype.$filter = filter
 Vue.use(ElementUI)
 
 Object.keys(filter).forEach(key => {

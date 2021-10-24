@@ -1,9 +1,9 @@
 export default {
 	formatTime (time) {
-			var hour = parseInt((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-			var minute = parseInt((time % (1000 * 60 * 60)) / (1000 * 60))
-			var second = (time % (1000 * 60)) / 1000
-	    return `${`0${hour}`.slice(-2)}:${`0${minute}`.slice(-2)}:${`0${second}`.slice(-2)}`
+		var hour = parseInt(time / 6000 % (3600 * 24))
+		var minute = parseInt(time / 60 % (60 * 60))
+		var second = parseInt(time % 60)
+		return `${`0${hour}`.slice(-2)}:${`0${minute}`.slice(-2)}:${`0${second}`.slice(-2)}`
 	}, // 格式化时间（ms）
 	formatDate (time, format = 'YYYY-MM-DD hh:mm:ss') {
 		var date = new Date(time),

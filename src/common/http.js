@@ -1,30 +1,29 @@
-import axios from 'axios'
-import $api from '@/common/api.js'
+import request from './request.js'
+import $api from './api.js'
 
 export default {
-	getToken (params) {
-		return axios({
+	getToken (data) {
+		return request({
 			url: $api.getToken,
 			method: 'POST',
-			params,
+			data,
 		})
 	},
-	room (params) {
-		return axios({
-			url: $api.room,
+	roomInfo (params) {
+		return request({
+			url: $api.roomInfo,
 			method: 'POST',
 			params,
 		})
 	},
 	verify (params) {
-		return axios({
+		return request({
 			url: $api.verify,
-			method: 'GET',
 			params,
 		})
 	},
 	updateRoom (data) {
-		return axios({
+		return request({
 			url: $api.updateRoom,
 			method: 'POST',
 			data,

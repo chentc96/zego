@@ -4,6 +4,7 @@
 		:class="align"
 		:style="{
 			'color': value ? colorOn : color,
+			'opacity': disabled ? 0.6 : 1,
 		}"
 		@click="onClick"
 	>
@@ -33,6 +34,7 @@
 			colorOn: String,
 			longpress: Boolean, // 是否长按识别二维码
 			space: String / Number, // 文字与图片的间距
+			disabled: Boolean,
 			error: {
 				type: String / Boolean,
 				default: require('@/assets/img/not_image.png')
@@ -64,15 +66,16 @@
 		},
 		methods: {
 			getSrc () {
-				let { image, imageOn, value } = this
-				this.src = value ? imageOn : image
+				let { image, imageOn, value, error } = this
+				this.src = (value ? imageOn : image) || error
 			},
 			onErr () {
 				let { error } = this
 				this.src = error
 			},
 			onClick () {
-				let { value } = this
+				let { value, disabled } = this
+				if (disabled) return
 				this.$emit('input', !value)
 				this.$emit('click', !value)
 			},
@@ -85,6 +88,10 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
+	cursor: pointer;
+	& > div:last-child {
+		flex: 1;
+	}
 	img {
 		width: 100%;
 		height: 100%;

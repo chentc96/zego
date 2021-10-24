@@ -29,6 +29,9 @@ async function init (data) {
 	console.log('开始初始化')
 	Object.assign(info, data)
 	zg = new ZegoExpressEngine(appID, server)
+	zg.setLogConfig({
+		logLevel: 'disable',
+	})
 	var result = await checkSystem()
 	if (!result) {
 		console.warn('初始化成功')
@@ -46,23 +49,15 @@ async function checkSystem () {
 			// 浏览器不支持webrtc
 			console.error('browser is not support webrtc')
 			return 'browser is not support webrtc'
-		}
-		else if (!result.videoCodec.H264 && !result.videoCodec.VP8) {
+		} else if (!result.videoCodec.H264 && !result.videoCodec.VP8) {
 			// 浏览器不支持H264和VP8
 			console.error('browser is not support H264 and VP8')
 			return 'browser is not support H264 and VP8'
-		}
-		// else if (!result.camera) {
-		// 	// 浏览器不允许使用摄像头
-		// 	console.error('camera not allowed to use')
-		// 	return 'camera not allowed to use'
-		// }
-		else if (!result.microphone) {
+		} else if (!result.microphone) {
 			// 浏览器不允许使用麦克风
 			console.error('microphone not allowed to use')
 			return 'microphones not allowed to use'
-		}
-		else if (!result.screenSharing) {
+		} else if (!result.screenSharing) {
 			// 浏览器不支持屏幕共享
 			console.error('browser is not support screenSharing')
 			return 'browser is not support screenSharing'
@@ -75,7 +70,7 @@ async function checkSystem () {
 }
 
 async function loginRoom () {
-	console.log('开始登录')
+	console.log('开始登录：', info)
 	var { roomID, userID, userName } = info
 	await $axios({
 		url: tokenUrl,
@@ -87,8 +82,8 @@ async function loginRoom () {
 	.then(({ data }) => {
 		try {
 			zg.loginRoom(roomID, data, {
-					userID,
-					userName,
+				userID,
+				userName,
 			}, {
 				userUpdate: true,
 			})
@@ -140,9 +135,9 @@ async function createAudioStream () {
 }
 
 function startPublishingStream (streamID, isAudio) {
+	console.log('正在推流：', streamID)
 	var { videoCodec } = info
 	var stream = isAudio ? audioStream : videoStream
-	console.log('开始推流：', streamID)
 	try {
 		zg.startPublishingStream(streamID, stream, { videoCodec })
 		console.warn('推流成功：', stream)
@@ -153,18 +148,17 @@ function startPublishingStream (streamID, isAudio) {
 }
 
 function stopPublishingStream (streamID) {
-	console.log('开始停止推流：', streamID)
+	console.log('正在停止推流：', streamID)
 	try {
 		zg.stopPublishingStream(streamID)
 		console.warn('停止推流成功')
-		return stream
 	} catch (err) {
 		console.error('停止推流失败：', err)
 	}
 }
 
 async function startPlayingStream (streamID) {
-	console.log('开始拉流：', streamID)
+	console.log('正在拉流：', streamID)
 	try {
 		var stream = await zg.startPlayingStream(streamID)
 		console.warn('拉流成功：', stream)
@@ -175,7 +169,7 @@ async function startPlayingStream (streamID) {
 }
 
 function stopPlayingStream (streamID) {
-	console.log('开始停止拉流：', streamID)
+	console.log('正在停止拉流：', streamID)
 	try {
 		zg.stopPlayingStream(streamID)
 		console.warn('停止拉流成功')
@@ -185,13 +179,64 @@ function stopPlayingStream (streamID) {
 }
 
 function logoutRoom () {
-	console.log('推出房间')
+	console.log('登出房间：', info)
 	var { roomID } = info
-	zg.destroyStream(videoStream)
-	zg.destroyStream(audioStream)
+	videoStream && zg.destroyStream(videoStream)
+	audioStream && zg.destroyStream(audioStream)
 	zg.logoutRoom(roomID)
 }
 
+// 模板
+// function initEvent () {
+// 	// 房间状态更新回调
+// 	zg.on('roomStateUpdate', (roomID, state, errorCode) => {
+// 		console.warn('roomStateUpdate：', state)
+// 		if (state === 'CONNECTED') {
+// 			// 与房间连接成功
+// 		} else if (state === 'DISCONNECTED') {
+// 			// 与房间连接断开
+// 		}
+// 	})
+// 	// 用户状态更新回调
+// 	zg.on('roomUserUpdate', (roomID, updateType, userList) => {
+// 		console.warn('roomUserUpdate：', updateType)
+// 		console.log(userList)
+// 		if (updateType === 'ADD') {
+// 			// 用户新增
+// 		} else if (updateType === 'DELETE') {
+// 			// 用户减少
+// 		}
+// 	})
+// 	// 流状态更新回调
+// 	zg.on('roomStreamUpdate', async (roomID, updateType, streamList) => {
+// 		console.warn('roomStreamUpdate：', updateType)
+// 		console.log(streamList)
+// 		if (updateType === 'ADD') {
+// 			// 流新增
+// 		} else if (updateType === 'DELETE') {
+// 			// 流减少
+// 		}
+// 	})
+// 	// 推流状态更新回调
+// 	zg.on('publisherStateUpdate', ({ state }) => {
+// 		console.warn('publisherStateUpdate：', state)
+// 		if (state === 'PUBLISHING') {
+// 			// 正在推流
+// 		} else if (state === 'NO_PUBLISH') {
+// 			// 未推流
+// 		}
+// 	})
+// 	// 拉流状态更新回调
+// 	zg.on('playerStateUpdate', ({ state }) => {
+// 		console.warn('playerStateUpdate：', state)
+// 		if (state === 'PLAYING') {
+// 			// 正在拉流
+// 		} else if (state === 'NO_PLAY') {
+// 			// 未拉流
+// 		}
+// 	})
+// }
+		
 export default {
 	init,
 	loginRoom,

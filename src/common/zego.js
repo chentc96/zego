@@ -10,7 +10,7 @@ const streamConfig = {
 	width: 1920, // 分辨率宽
 	height: 1080, // 分辨率高
 	frameRate: 30, // 帧率
-	bitrate: 6000, // 码率
+	bitrate: 2000, // 码率
 	startBitrate: 'target', // 开始码率
 	videoOptimizationMode: 'detail', // 视频优化模式
 }

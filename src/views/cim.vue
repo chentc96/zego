@@ -6,13 +6,17 @@
 			cancelText="Hold On"
 			confirmText="Leave"
 			v-model="show"
-			@cancel="onLogin()"
+			@confirm="onLogin()"
 		/>
 		<audio ref="audio" loop preload autoplay playsinline controls hidden/>
 		<video v-show="isPlay" ref="video" autoplay playsinline/>
-		<iframe v-show="!isPlay" :src="`/pano2vr/${mineID}/`"/>
+		<iframe v-show="!isPlay" :src="`https://kf.v2.vr.api.taobao.top/static/${mineID}/`"/>
 		<div class="cim-main">
-			<div v-if="isLogin">
+			<div
+				v-if="isLogin"
+				v-loading="!isPlay"
+				element-loading-background="rgba(255, 255, 255, 0.5)"
+			>
 				<tc-icons :image="serveInfo.headimgurl" size="38" space="8" :imageClass="{
 					'border-radius': '50%',
 				}">
@@ -30,7 +34,7 @@
 					size="24" space="12"
 				>{{time | formatTime}}</tc-icons>
 			</div>
-			<div v-if="isPlay">
+			<div v-if="isLogin">
 				<tc-icons
 					:image="require('@/assets/img/leave.png')"
 					size="24" space="10"
@@ -39,7 +43,7 @@
 			</div>
 			<div v-else>
 				<tc-icons
-					:image="require('@/assets/img/select.png')"
+					:image="require('@/assets/img/view.png')"
 					size="36" space="10"
 					@click="getRoomInfo"
 				>VR Watch</tc-icons>
@@ -88,6 +92,20 @@ export default {
 			}
 			clearInterval(interval)
 			this.time = 0
+		},
+		init () {
+			var { info } = this
+			zego.init(info)
+			.then(res => {
+				this.zg = res
+				this.initEvent()
+				this.onLogin(true)
+			})
+			.catch(err => {
+				this.$message.error({
+					message: err,
+				})
+			})
 		},
 		onLogin (flag) {
 			this.isLogin = flag
@@ -147,17 +165,7 @@ export default {
 				if (state === 'CONNECTED') {
 					// 与房间连接成功
 					zego.createAudioStream()
-					.then(() => {
-						this.pushAudioStream(true)
-						this.updateRoom({
-							count: 'add',
-						})
-					})
-				} else if (state === 'DISCONNECTED') {
-					// 与房间连接断开
-					this.updateRoom({
-						count: 'reduce',
-					})
+					.then(() => this.pushAudioStream(true))
 				}
 			})
 			// 流状态更新回调
@@ -172,16 +180,6 @@ export default {
 					// 流减少
 					this.onLogin()
 				}
-			})
-		},
-		updateRoom (data) {
-			console.log('开始更新房间')
-			var { roomID, userID, userName } = this.info
-			this.$http.updateRoom({
-				room_id: roomID,
-				user_id: userID,
-				user_name: userName,
-				...data,
 			})
 		},
 		verify (roomID) {
@@ -199,12 +197,7 @@ export default {
 					userID: id,
 					userName: name,
 				}
-				zego.init(this.info)
-				.then(res => {
-					this.zg = res
-					this.initEvent()
-					this.onLogin(true)
-				})
+				this.init()
 			})
 		},
 		getRoomInfo () {

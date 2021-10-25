@@ -2,7 +2,6 @@
   <div class="sim-page">
 		<audio ref="audio" loop preload autoplay playsinline controls hidden/>
 		<div class="sim-header">
-			<!-- <el-image class="sim-header_pic" :src="require('@/assets/img/view.png')" fit="contain"/> -->
 			<div class="sim-header_info">
 				<div class="header-info_name">{{mineInfo.name}}</div>
 				<div>
@@ -12,54 +11,53 @@
 						<div class="header-info_serve">
 							<div>{{info.userName}}</div>
 							<div>
-								<el-tag v-if="isLogin" type="success" size="mini">在线</el-tag>
-								<el-tag v-else type="danger" size="mini">离线</el-tag>
+								<el-tag v-if="isLogin" type="success" size="mini">Online</el-tag>
+								<el-tag v-else type="danger" size="mini">Offline</el-tag>
 							</div>
 						</div>
 					</tc-icons>
 				</div>
 				<!-- <div class="header-info_time">2021-10-12 12:15:00 至 2021-10-12 13:30:30</div> -->
 			</div>
+			<tc-icons
+				:disabled="!zg"
+				:image="require('@/assets/img/login_on.png')"
+				:imageOn="require('@/assets/img/login_off.png')"
+				size="48" space="12" align="bottom"
+				:value="isLogin"
+				@click="onLogin"
+			/>
 		</div>
 		<div class="sim-centre">
-			<div class="sim-centre_state">正在通话</div>
+			<div class="sim-centre_state">Call Duration</div>
 			<div class="sim-centre_time">{{time | formatTime}}</div>
 			<div class="sim-centre_audio">
-				
+				<el-image :src="require('@/assets/img/audio.png')" fit="contain"/>
 			</div>
 			<div class="sim-centre_active">
 				<tc-icons
-					:disabled="!zg"
-					:image="require('@/assets/img/login.png')"
-					:imageOn="require('@/assets/img/logout.png')"
-					size="62" space="12" align="bottom"
-					:value="isLogin"
-					@click="onLogin"
-				>{{isLogin ? '退出' :'登录'}}</tc-icons>
-				<tc-icons
-					:style="{ 'visibility': isLogin ? '' : 'hidden'}"
 					:disabled="!streamList.length"
-					:image="require('@/assets/img/answer.png')"
-					:imageOn="require('@/assets/img/hangup.png')"
-					size="62" space="12" align="bottom"
+					:image="require('@/assets/img/connect_on.png')"
+					:imageOn="require('@/assets/img/connect_off.png')"
+					size="56" space="12" align="bottom"
 					:value="isPlay"
 					@click="onPlay"
-				>{{isPlay ? '挂断' :'接听'}}</tc-icons>
+				>{{isPlay ? 'Hang Up' :'Answer'}}</tc-icons>
 				<tc-icons
-					:style="{ 'visibility': isPlay ? '' : 'hidden'}"
-					:image="require('@/assets/img/record.png')"
-					:imageOn="require('@/assets/img/record_on.png')"
-					size="42" space="12" align="bottom"
+					:disabled="!isPlay"
+					:image="require('@/assets/img/voice_off.png')"
+					:imageOn="require('@/assets/img/voice_on.png')"
+					size="48" space="12" align="bottom"
 					v-model="isMute"
 					@click="onMute"
-				>静音</tc-icons>
+				>Mute</tc-icons>
 			</div>
 		</div>
 		<div class="sim-footer">
 			<!-- <div class="sim-footer_time">常看次数：<span>120</span> 平均时长：<span>30分钟</span></div> -->
 			<div class="sim-footer_list">
-				<el-table :data="userList" height="280" border :header-cell-style="{ backgroundColor: '#EEE' }">
-					<el-table-column label="序号" type="index" width="80" align="center"/>
+				<el-table :data="userList" height="280" border :header-cell-style="{ backgroundColor: '#EEE' }" empty-text="No Data">
+					<el-table-column label="No." type="index" width="80" align="center"/>
 					<el-table-column v-for="(v, k, i) in rowData" :key="i" :prop="k" :label="v" align="center"/>
 				</el-table>
 			</div>
@@ -87,11 +85,11 @@ export default {
 			streamList: [],
 			userList: [],
 			rowData: {
-				userName: '用户名',
-				userID: '用户ID',
-				start: '进入房间时间',
-				end: '离开房间时间',
-				stay: '停留时长',
+				userName: 'User Name',
+				userID: 'User ID',
+				start: 'Start Time',
+				end: 'End Time',
+				stay: 'Duration',
 			},
 		}
 	},
@@ -131,6 +129,19 @@ export default {
 			clearInterval(interval)
 			this.setData()
 			this.time = 0
+		},
+		init () {
+			var { info } = this
+			zego.init(info)
+			.then(res => {
+				this.zg = res
+				this.initEvent()
+			})
+			.catch(err => {
+				this.$message.error({
+					message: err,
+				})
+			})
 		},
 		onLogin (flag) {
 			if (flag) {
@@ -220,11 +231,22 @@ export default {
 			zg.on('roomUserUpdate', (roomID, updateType, userList) => {
 				console.warn('roomUserUpdate：', updateType)
 				console.log(userList)
+				var userInfo = userList[0]
 				if (updateType === 'ADD') {
 					// 用户新增
-					this.custInfo = userList[0]
+					this.custInfo = userInfo
+					this.updateRoom({
+						count: 'add',
+						user_id: userInfo.userID,
+						user_name: userInfo.userName,
+					})
 				} else if (updateType === 'DELETE') {
 					// 用户减少
+					this.updateRoom({
+						count: 'reduce',
+						user_id: userInfo.userID,
+						user_name: userInfo.userName,
+					})
 					this.custInfo = {}
 				}
 			})
@@ -267,11 +289,7 @@ export default {
 					userID: id,
 					userName: name,
 				}
-				zego.init(this.info)
-				.then(res => {
-					this.zg = res
-					this.initEvent()
-				})
+				this.init()
 			})
 		},
 	}
@@ -281,18 +299,13 @@ export default {
 <style lang="scss" scoped>
 .sim-page {
 	.sim-header {
-		padding: 14px 24px 20px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 		background-color: #FFF;
 		border: 1px solid #EEE;
 		box-shadow: 0 12px 12px 0px rgba(0, 0, 0, 0.05);
-		display: flex;
-		.sim-header_pic {
-			width: 160px;
-			height: 98px;
-			border-radius: 4px;
-			overflow: hidden;
-			margin-right: 12px;
-		}
+		padding: 14px 30px 20px 24px;
 		.sim-header_info {
 			& > div:not(:last-child) {
 				margin-bottom: 10px;
@@ -341,7 +354,7 @@ export default {
 		}
 		.sim-centre_audio {
 			margin: 22px 0 30px;
-			height: 142px;
+			padding: 10px 60px;
 			background-color: #F7F7F7;
 			border: 1px solid #EEE;
 			border-radius: 4px;

@@ -1,6 +1,6 @@
 <template>
   <div>
-		<iframe :src="`/pano2vr/${mineId}/`"/>
+		<iframe :src="`https://kf.v2.vr.api.taobao.top/static/${mineId}/`"/>
 	</div>
 </template>
 

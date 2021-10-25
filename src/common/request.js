@@ -16,7 +16,7 @@ request.interceptors.request.use((config) => {
 	// 请求错误
 	loading.close()
 	Message.error({
-		message: '请求错误！',
+		message: 'Request Error！',
 	})
 	return Promise.reject(err)
 })
@@ -35,7 +35,7 @@ request.interceptors.response.use(res => {
 	// 响应错误
 	loading.close()
 	Message.error({
-		message: '请求失败！',
+		message: 'Request Failed！',
 	})
 	return Promise.reject(err)
 })

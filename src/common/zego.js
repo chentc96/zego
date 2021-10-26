@@ -29,6 +29,7 @@ async function init (data) {
 	console.log('开始初始化')
 	Object.assign(info, data)
 	zg = new ZegoExpressEngine(appID, server)
+	console.warn(`version：${zg.getVersion()}`)
 	zg.setLogConfig({
 		logLevel: 'disable',
 	})

@@ -8,7 +8,7 @@ const routes = [
     name: 'Vr',
     path: '/vr/:mineId',
 		meta: {
-			title: '展示',
+			title: 'VR',
 		},
     component: () => import('@/views/index.vue')
   },

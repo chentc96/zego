@@ -10,7 +10,7 @@
 		/>
 		<audio ref="audio" loop preload autoplay playsinline controls hidden/>
 		<video v-show="isPlay" ref="video" autoplay playsinline/>
-		<iframe v-show="!isPlay" :src="`https://kf.v2.vr.api.taobao.top/static/${mineID}/`"/>
+		<vr v-show="!isPlay" :mineId="mineID"/>
 		<div class="cim-main">
 			<div
 				v-if="isLogin"
@@ -53,10 +53,14 @@
 </template>
 
 <script>
+import vr from './index.vue'
 import zego from '@/common/zego.js'
 var interval = null
 export default {
 	name: 'Cim',
+	components: {
+		vr,
+	},
 	data () {
 		return {
 			zg: null,

@@ -1,21 +1,26 @@
 <template>
   <div>
-		<iframe :src="`https://kf.v2.vr.api.taobao.top/static/${mineId}/`"/>
+		<iframe :src="`${url}${mineId}/`"/>
 	</div>
 </template>
 
 <script>
+import $api from '@/common/api.js'
 export default {
-	name: 'Home',
+	name: 'Vr',
+	props: {
+		mineId: {
+			type: String / Number,
+			default () {
+				return this.$route.params.mineId
+			}
+		},
+	},
 	data () {
 		return {
-			mineId: '1',
+			url: $api.vr,
 		}
 	},
-	created () {
-		var { mineId } = this.$route.params
-		this.mineId = mineId
-	}
 }
 </script>
 

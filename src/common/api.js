@@ -7,6 +7,7 @@ if (host.indexOf('cs') > -1) {
 }
 export default {
 	baseURL,
+	vr: `${baseURL}static/`, // vr预览地址
 	getToken: `${baseURL}index/index/gettoken`, // 获取zg推拉流token
 	roomInfo: `${baseURL}index/index/roominfo`, // 获取房间列表
 	verify: `${baseURL}index/index/verify`, // 验证房间状态获取身份信息

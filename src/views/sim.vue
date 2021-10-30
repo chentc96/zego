@@ -117,6 +117,7 @@ export default {
 				end: this.$filter.formatDate(custInfo.end),
 				stay: this.$filter.formatTime((custInfo.end - custInfo.start) / 1000),
 			})
+			console.log(this.userList)
 		},
 		setInterval (flag) {
 			if (flag) {
@@ -178,7 +179,7 @@ export default {
 			this.isMute = flag
 			flag
 				? zg.muteMicrophone(true)
-				: zg.muteMicrophone()
+				: zg.muteMicrophone(false)
 		},
 		pushVideoStream (flag) {
 			var { info } = this
@@ -213,10 +214,9 @@ export default {
 		},
 		initEvent () {
 			var { zg } = this
-			// 房间状态更新回调
 			zg.on('roomStateUpdate', (roomID, state, errorCode) => {
-				console.warn('roomStateUpdate：', state)
-				if (state === 'CONNECTED') {
+				console.warn('房间状态更新：', state)
+				if (!this.isLogin && state === 'CONNECTED') {
 					// 与房间连接成功
 					zego.createVideoStream()
 					.then(() => {
@@ -227,9 +227,8 @@ export default {
 					})
 				}
 			})
-			// 用户状态更新回调
 			zg.on('roomUserUpdate', (roomID, updateType, userList) => {
-				console.warn('roomUserUpdate：', updateType)
+				console.warn('用户状态更新：', updateType)
 				console.log(userList)
 				var userInfo = userList[0]
 				if (updateType === 'ADD') {
@@ -247,12 +246,10 @@ export default {
 						user_id: userInfo.userID,
 						user_name: userInfo.userName,
 					})
-					this.custInfo = {}
 				}
 			})
-			// 流状态更新回调
 			zg.on('roomStreamUpdate', async (roomID, updateType, streamList) => {
-				console.warn('roomStreamUpdate：', updateType)
+				console.warn('流状态更新：', updateType)
 				console.log(streamList)
 				if (updateType === 'ADD') {
 					// 流新增

@@ -7,10 +7,10 @@ const tokenUrl = 'https://wsliveroom-alpha.zego.im:8282/token'
 const logUrl = 'wss://weblogger-test.zego.im/log'
 const streamConfig = {
 	videoQuality: 4, // 质量模式
-	width: 1920, // 分辨率宽
-	height: 1080, // 分辨率高
-	frameRate: 30, // 帧率
-	bitrate: 2000, // 码率
+	width: 1280, // 分辨率宽
+	height: 720, // 分辨率高
+	frameRate: 40, // 帧率
+	bitrate: 4000, // 码率
 	startBitrate: 'target', // 开始码率
 	videoOptimizationMode: 'detail', // 视频优化模式
 }
@@ -71,7 +71,7 @@ async function checkSystem () {
 }
 
 async function loginRoom () {
-	console.log('开始登录：', info)
+	console.log('正在登录：', info)
 	var { roomID, userID, userName } = info
 	await $axios({
 		url: tokenUrl,
@@ -190,14 +190,16 @@ function logoutRoom () {
 // 模板
 // function initEvent () {
 // 	// 房间状态更新回调
-// 	zg.on('roomStateUpdate', (roomID, state, errorCode) => {
-// 		console.warn('roomStateUpdate：', state)
-// 		if (state === 'CONNECTED') {
-// 			// 与房间连接成功
-// 		} else if (state === 'DISCONNECTED') {
-// 			// 与房间连接断开
-// 		}
-// 	})
+	// zg.on('roomStateUpdate', (roomID, state, errorCode) => {
+	// 	console.warn('roomStateUpdate：', state)
+	// 	if (state === 'CONNECTED') {
+	// 		// 与房间连接成功
+	// 	} else if (state == 'CONNECTING') {
+ //      // 与房间尝试连接中
+ //    } else if (state === 'DISCONNECTED') {
+	// 		// 与房间连接断开
+	// 	}
+	// })
 // 	// 用户状态更新回调
 // 	zg.on('roomUserUpdate', (roomID, updateType, userList) => {
 // 		console.warn('roomUserUpdate：', updateType)

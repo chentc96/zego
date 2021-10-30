@@ -12,14 +12,24 @@
 		<video v-show="isPlay" ref="video" autoplay playsinline/>
 		<vr v-show="!isPlay" :mineId="mineID"/>
 		<div class="cim-main">
-			<div
-				v-if="isLogin"
-				v-loading="!isPlay"
-				element-loading-background="rgba(255, 255, 255, 0.5)"
-			>
-				<tc-icons :image="serveInfo.headimgurl" size="38" space="8" :imageClass="{
-					'border-radius': '50%',
-				}">
+			<div v-if="!isLogin">
+				<tc-icons
+					:image="require('@/assets/img/view.png')"
+					size="36" space="10"
+					@click="getRoomInfo"
+				>VR Watch</tc-icons>
+			</div>
+			<div v-if="isLogin && !isPlay">
+				<tc-icons
+					:image="require('@/assets/img/loading.gif')"
+					size="24" space="12"
+				>Loading...</tc-icons>
+			</div>
+			<div v-if="isPlay">
+				<tc-icons
+					:image="require('@/assets/img/serve.png')"
+					size="38" space="8"
+				>
 					<div class="cim-main_info">
 						<div>
 							<span>{{serveInfo.name}}</span>
@@ -40,13 +50,6 @@
 					size="24" space="10"
 					@click="show = true"
 				>Leave</tc-icons>
-			</div>
-			<div v-else>
-				<tc-icons
-					:image="require('@/assets/img/view.png')"
-					size="36" space="10"
-					@click="getRoomInfo"
-				>VR Watch</tc-icons>
 			</div>
 		</div>
 	</div>
@@ -163,18 +166,16 @@ export default {
 		},
 		initEvent () {
 			var { zg } = this
-			// 房间状态更新回调
 			zg.on('roomStateUpdate', (roomID, state, errorCode) => {
-				console.warn('roomStateUpdate：', state)
+				console.warn('房间状态更新：', state)
 				if (state === 'CONNECTED') {
 					// 与房间连接成功
 					zego.createAudioStream()
 					.then(() => this.pushAudioStream(true))
 				}
 			})
-			// 流状态更新回调
 			zg.on('roomStreamUpdate', async (roomID, updateType, streamList) => {
-				console.warn('roomStreamUpdate：', updateType)
+				console.warn('流状态更新：', updateType)
 				console.log(streamList)
 				if (updateType === 'ADD') {
 					// 流新增
@@ -205,7 +206,6 @@ export default {
 			})
 		},
 		getRoomInfo () {
-			if (this.isLogin) return
 			console.log('开始获取房间信息')
 			var { token, mineID } = this
 			this.$http.roomInfo({

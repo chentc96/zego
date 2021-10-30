@@ -3,7 +3,7 @@ var baseURL = 'https://kf.v2.vr.api.taobao.top/'
 if (host.indexOf('cs') > -1) {
 	baseURL = 'https://cs.v2.vr.api.taobao.top/' // 测试环境
 } else if (host.indexOf('bitmine') > -1) {
-	// baseURL = '' // 生产环境
+	baseURL = 'https://vr.api.bitmine.com/' // 生产环境
 }
 export default {
 	baseURL,

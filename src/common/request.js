@@ -8,13 +8,10 @@ const request = axios.create({
 // 添加请求拦截器
 request.interceptors.request.use((config) => {
 	// 请求前
-	loading = Loading.service({
-		background: 'rgba(0, 0, 0, 0.2)',
-	})
 	return config
 }, (err) => {
 	// 请求错误
-	loading.close()
+	loading && loading.close()
 	Message.error({
 		message: 'Request Error！',
 	})
@@ -24,20 +21,28 @@ request.interceptors.request.use((config) => {
 // 添加响应拦截器
 request.interceptors.response.use(res => {
 	// 响应数据
-	loading.close()
+	loading && loading.close()
 	var { code, data, msg } = res.data
-	if (code === 1) return data
+	if (code === 200) return data
+	window.parent.postMessage(res.data, '*')
 	Message.error({
 		message: msg,
 	})
 	return Promise.reject(msg)
 }, (err) => {
 	// 响应错误
-	loading.close()
+	loading && loading.close()
 	Message.error({
 		message: 'Request Failed！',
 	})
 	return Promise.reject(err)
 })
 
-export default request
+export default function (data, attr = {}) {
+	if (!attr.hideLoad) {
+		loading = Loading.service({
+			background: 'rgba(0, 0, 0, 0.2)',
+		})
+	}
+	return request(data)
+}

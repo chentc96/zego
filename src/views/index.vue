@@ -1,6 +1,6 @@
 <template>
   <div>
-		<iframe :src="`${url}${mineId}/`"/>
+		<iframe ref="iframe" :src="`${url}${mineId}/`"/>
 	</div>
 </template>
 
@@ -19,6 +19,12 @@ export default {
 	data () {
 		return {
 			url: $api.vr,
+		}
+	},
+	mounted () {
+		let loading = this.$loading()
+		this.$refs.iframe.onload = () => {
+		  loading.close()
 		}
 	},
 }

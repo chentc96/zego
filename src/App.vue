@@ -9,12 +9,10 @@
 	margin: 0;
 	padding: 0;
 }
-.status {
-	display: inline-block;
-	position: relative;
+[class*='status'] {
 	font-family: PingFangSC, PingFangSC-Regular;
 	font-size: 12px;
-	color: #757575;
+	position: relative;
 	padding-left: 10px;
 	&:before {
 		content: '';
@@ -25,7 +23,24 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background-color: #ff0404;
+	}
+	&[class*='0'] {
+		color: red;
+		&:before {
+			background-color: red;
+		}
+	}
+	&[class*='1'] {
+		color: green;
+		&:before {
+			background-color: green;
+		}
+	}
+	&[class*='2'] {
+		color: orange;
+		&:before {
+			background-color: orange;
+		}
 	}
 }
 </style>

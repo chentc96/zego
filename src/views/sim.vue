@@ -1,5 +1,14 @@
 <template>
   <div class="sim-page">
+		<tc-popup
+			:title="i18n.popup.title"
+			:msg="i18n.popup.msg"
+			:confirm="i18n.popup.confirm"
+			:cancel="i18n.popup.cancel"
+			v-model="show"
+			@confirm="sendCommand(0)"
+			@cancel="onAnswer"
+		/>
 		<audio ref="audio" loop preload autoplay playsinline controls hidden/>
 		<div class="sim-header">
 			<div class="sim-header_info">
@@ -10,17 +19,16 @@
 					}">
 						<div class="header-info_serve">
 							<div>{{info.userName}}</div>
-							<div>
-								<el-tag v-if="isLogin" type="success" size="mini">Online</el-tag>
-								<el-tag v-else type="danger" size="mini">Offline</el-tag>
-							</div>
+							<div class="status-0" v-if="!isLogin">{{map.status[0]}}</div>
+							<div class="status-1" v-if="isLogin && !isPlay">{{map.status[1]}}</div>
+							<div class="status-2" v-if="isLogin && isPlay">{{map.status[2]}}</div>
 						</div>
 					</tc-icons>
 				</div>
 				<!-- <div class="header-info_time">2021-10-12 12:15:00 至 2021-10-12 13:30:30</div> -->
 			</div>
 			<tc-icons
-				:disabled="!zg"
+				:disabled="!zg || isPlay"
 				:image="require('@/assets/img/login_on.png')"
 				:imageOn="require('@/assets/img/login_off.png')"
 				size="48" space="12" align="bottom"
@@ -29,20 +37,18 @@
 			/>
 		</div>
 		<div class="sim-centre">
-			<div class="sim-centre_state">Call Duration</div>
+			<div class="sim-centre_state">{{i18n.duration}}</div>
 			<div class="sim-centre_time">{{time | formatTime}}</div>
 			<div class="sim-centre_audio">
 				<el-image :src="require('@/assets/img/audio.png')" fit="contain"/>
 			</div>
 			<div class="sim-centre_active">
 				<tc-icons
-					:disabled="!streamList.length"
-					:image="require('@/assets/img/connect_on.png')"
-					:imageOn="require('@/assets/img/connect_off.png')"
+					:disabled="!isPlay"
+					:image="require('@/assets/img/connect_off.png')"
 					size="56" space="12" align="bottom"
-					:value="isPlay"
-					@click="onPlay"
-				>{{isPlay ? 'Hang Up' :'Answer'}}</tc-icons>
+					@click="pushStream(false)"
+				>{{i18n.hangup}}</tc-icons>
 				<tc-icons
 					:disabled="!isPlay"
 					:image="require('@/assets/img/voice_off.png')"
@@ -50,15 +56,15 @@
 					size="48" space="12" align="bottom"
 					v-model="isMute"
 					@click="onMute"
-				>Mute</tc-icons>
+				>{{i18n.mute}}</tc-icons>
 			</div>
 		</div>
 		<div class="sim-footer">
 			<!-- <div class="sim-footer_time">常看次数：<span>120</span> 平均时长：<span>30分钟</span></div> -->
 			<div class="sim-footer_list">
-				<el-table :data="userList" height="280" border :header-cell-style="{ backgroundColor: '#EEE' }" empty-text="No Data">
+				<el-table :data="custList" height="280" border :header-cell-style="{ backgroundColor: '#EEE' }" :empty-text="tips.noData">
 					<el-table-column label="No." type="index" width="80" align="center"/>
-					<el-table-column v-for="(v, k, i) in rowData" :key="i" :prop="k" :label="v" align="center"/>
+					<el-table-column v-for="(v, k, i) in i18n.rowData" :key="i" :prop="k" :label="v" align="center"/>
 				</el-table>
 			</div>
 			<!-- <div class="sim-footer_tips">备注：若用户自己退出VR带看，则系统自动保存语音（格式为：客户ID+进入房间时间）到客服的统计数据列表中</div> -->
@@ -68,210 +74,51 @@
 
 <script>
 import zego from '@/common/zego.js'
-var interval = null
+var timer = null
 export default {
 	name: 'Sim',
 	data () {
 		return {
+			i18n: this.$t('sim'),
+			tips: this.$t('tips'),
+			map: this.$t('map'),
 			zg: null,
+			show: false,
 			isLogin: false,
 			isPlay: false,
 			isMute: false,
 			token: '',
 			time: 0,
-			mineInfo: {},
-			custInfo: {},
+			startTime: 0,
+			endTime: 0,
 			info: {},
-			streamList: [],
-			userList: [],
-			rowData: {
-				userName: 'User Name',
-				userID: 'User ID',
-				start: 'Start Time',
-				end: 'End Time',
-				stay: 'Duration',
-			},
+			custInfo: {},
+			mineInfo: {},
+			custList: [],
 		}
+	},
+	watch: {
+		isPlay (n) {
+			this.setInterval(n)
+		},
 	},
 	created () {
 		var { token, roomID } = this.$route.query
 		this.token = token
 		this.verify(roomID)
-	},
-	watch: {
-		isPlay (n) {
-			this.setInterval(n)
+		window.onbeforeunload = () => {
+			window.event.returnValue = ''
+			this.sendCommand(0)
+			this.onLogin(false)
+			this.updateRoom({
+				count: 'reduce',
+				publish: 'false',
+			})
 		}
 	},
 	methods: {
-		setData (flag) {
-			if (flag) {
-				this.custInfo.start = new Date().getTime()
-				return
-			}
-			this.custInfo.end = new Date().getTime()
-			var { custInfo } = this
-			this.userList.push({
-				...custInfo,
-				start: this.$filter.formatDate(custInfo.start),
-				end: this.$filter.formatDate(custInfo.end),
-				stay: this.$filter.formatTime((custInfo.end - custInfo.start) / 1000),
-			})
-			console.log(this.userList)
-		},
-		setInterval (flag) {
-			if (flag) {
-				this.setData(true)
-				interval = setInterval(() => {
-					this.time += 1
-				}, 1000)
-				return
-			}
-			clearInterval(interval)
-			this.setData()
-			this.time = 0
-		},
-		init () {
-			var { info } = this
-			zego.init(info)
-			.then(res => {
-				this.zg = res
-				this.initEvent()
-			})
-			.catch(err => {
-				this.$message.error({
-					message: err,
-				})
-			})
-		},
-		onLogin (flag) {
-			if (flag) {
-				zego.loginRoom()
-				this.updateRoom({
-					count: 'add',
-					publish: 'true',
-				})
-				.then(() => this.isLogin = flag)
-			} else {
-				if (this.isPlay) this.onPlay()
-				zego.logoutRoom()
-				this.updateRoom({
-					count: 'reduce',
-					publish: 'false',
-				})
-				.then(() => this.isLogin = flag)
-			}
-		},
-		onPlay (flag) {
-			if (flag) {
-				this.pushVideoStream(true)
-				this.pushAudioStream(true)
-				this.pullAudioStream(true)
-			} else {
-				this.pushVideoStream()
-				this.pushAudioStream()
-				this.pullAudioStream()
-				this.streamList = []
-			}
-		},
-		onMute (flag) {
-			var { zg } = this
-			this.isMute = flag
-			flag
-				? zg.muteMicrophone(true)
-				: zg.muteMicrophone(false)
-		},
-		pushVideoStream (flag) {
-			var { info } = this
-			flag
-			 ? zego.startPublishingStream(info.streamID)
-			 : zego.stopPublishingStream(info.streamID)
-		},
-		pushAudioStream (flag) {
-			var { info } = this
-			flag
-			 ? zego.startPublishingStream(`${info.streamID}audio`, true)
-			 : zego.stopPublishingStream(`${info.streamID}audio`)
-		},
-		pullAudioStream (flag) {
-			var { streamList } = this
-			streamList.forEach(item => {
-				var { streamID } = item
-				if (streamID.indexOf('audio') > -1) {
-					if (flag) {
-						zego.startPlayingStream(streamID)
-						.then(stream => {
-							this.$refs.audio.srcObject = stream
-							this.isPlay = true
-						})
-					} else {
-						zego.stopPlayingStream(streamID)
-						this.$refs.audio.srcObject = null
-						this.isPlay = false
-					}
-				}
-			})
-		},
-		initEvent () {
-			var { zg } = this
-			zg.on('roomStateUpdate', (roomID, state, errorCode) => {
-				console.warn('房间状态更新：', state)
-				if (!this.isLogin && state === 'CONNECTED') {
-					// 与房间连接成功
-					zego.createVideoStream()
-					.then(() => {
-						zego.createAudioStream()
-					})
-					.catch(() => {
-						this.onLogin(false)
-					})
-				}
-			})
-			zg.on('roomUserUpdate', (roomID, updateType, userList) => {
-				console.warn('用户状态更新：', updateType)
-				console.log(userList)
-				var userInfo = userList[0]
-				if (updateType === 'ADD') {
-					// 用户新增
-					this.custInfo = userInfo
-					this.updateRoom({
-						count: 'add',
-						user_id: userInfo.userID,
-						user_name: userInfo.userName,
-					})
-				} else if (updateType === 'DELETE') {
-					// 用户减少
-					this.updateRoom({
-						count: 'reduce',
-						user_id: userInfo.userID,
-						user_name: userInfo.userName,
-					})
-				}
-			})
-			zg.on('roomStreamUpdate', async (roomID, updateType, streamList) => {
-				console.warn('流状态更新：', updateType)
-				console.log(streamList)
-				if (updateType === 'ADD') {
-					// 流新增
-					this.streamList = streamList
-				} else if (updateType === 'DELETE') {
-					// 流减少
-					this.onPlay()
-				}
-			})
-		},
-		updateRoom (data) {
-			console.log('开始更新房间')
-			var { roomID, userID, userName } = this.info
-			return this.$http.updateRoom({
-				room_id: roomID,
-				user_id: userID,
-				user_name: userName,
-				...data,
-			})
-		},
 		verify (roomID) {
-			console.log('开始获取用户信息')
+			console.log('开始校验信息')
 			var { token } = this
 			this.$http.verify({
 				room_id: roomID,
@@ -287,6 +134,163 @@ export default {
 					userName: name,
 				}
 				this.init()
+			})
+		},
+		init () {
+			var { info } = this
+			zego.init(info)
+			.then(res => {
+				this.zg = res
+				this.initEvent()
+			})
+			.catch(err => {
+				this.$message.error({
+					message: err,
+				})
+			})
+		},
+		initEvent () {
+			var { zg, i18n } = this
+			zg.on('roomStateUpdate', (roomID, state, errorCode) => {
+				console.warn('房间状态更新：', state)
+				if (state === 'CONNECTED') {
+					// 与房间连接成功
+					zego.createVideoStream()
+					.then(() => {
+						zego.createAudioStream()
+						this.updateRoom({
+							count: 'add',
+							publish: 'true',
+						})
+					})
+					.catch(() => {
+						this.sendCommand(0)
+						this.onLogin(false)
+					})
+				} else if (state === 'DISCONNECTED') {
+					// 与房间断开了连接
+					this.updateRoom({
+						count: 'reduce',
+						publish: 'false',
+					})
+				}
+			})
+			zg.on('roomStreamUpdate', async (roomID, updateType, streamList) => {
+				console.warn('流状态更新：', updateType)
+				console.log(streamList)
+				if (updateType === 'ADD') {
+					// 流新增
+					this.pullStream(streamList, true)
+				} else if (updateType === 'DELETE') {
+					// 流减少
+					this.pullStream(streamList, false)
+				}
+			})
+			zg.on('roomUserUpdate', (roomID, updateType, userList) => {
+				console.warn('用户状态更新：', updateType)
+				console.log(userList)
+				var userInfo = userList[0]
+				if (updateType === 'ADD') {
+					// 用户新增
+					this.custInfo = userInfo
+					this.show = true
+				} else if (updateType === 'DELETE') {
+					// 用户减少
+					this.updateRoom({
+						count: 'reduce',
+						user_id: userInfo.userID,
+						user_name: userInfo.userName,
+					})
+					this.custInfo = {}
+				}
+			})
+		},
+		onLogin (flag) {
+			this.isLogin = flag
+			flag
+				? zego.loginRoom()
+				: zego.logoutRoom()
+		},
+		onAnswer () {
+			var { custInfo, i18n } = this
+			if (!custInfo.userID) {
+				this.$message.error({
+					message: i18n.leave,
+				})
+				return
+			}
+			this.pushStream(true)
+			this.updateRoom({
+				count: 'add',
+				user_id: custInfo.userID,
+				user_name: custInfo.userName,
+			})
+		},
+		onMute (flag) {
+			var { zg } = this
+			zg.muteMicrophone(flag)
+		},
+		pullStream (streamList, flag) {
+			streamList.forEach((item, i) => {
+				var { streamID } = item
+				if (flag) {
+					zego.startPlayingStream(streamID, true)
+					.then(stream => {
+						this.$refs.audio.srcObject = stream
+						this.startTime = new Date().getTime()
+						this.isPlay = true
+					})
+				} else {
+					zego.stopPlayingStream(true)
+					this.$refs.audio.srcObject = null
+					this.endTime = new Date().getTime()
+					this.isPlay = false
+					this.isMute = false
+				}
+			})
+		},
+		pushStream (flag) {
+			if (flag) {
+				zego.startPublishingStream(false)
+				zego.startPublishingStream(true)
+			} else {
+				zego.stopPublishingStream(false)
+				zego.stopPublishingStream(true)
+			}
+		},
+		updateRoom (data) {
+			console.log('开始更新房间')
+			var { roomID, userID, userName } = this.info
+			return this.$http.updateRoom({
+				room_id: roomID,
+				user_id: userID,
+				user_name: userName,
+				...data,
+			})
+		},
+		sendCommand (code) {
+			var { custInfo } = this
+			this.show = false
+			custInfo.userID && zego.sendCustomCommand([custInfo.userID], code)
+		},
+		setInterval (flag) {
+			if (flag) {
+				timer = setInterval(() => {
+					this.time += 1
+				}, 1000)
+				return
+			}
+			clearInterval(timer)
+			this.setData()
+			this.time = 0
+		},
+		setData () {
+			var { custInfo, startTime, endTime, time } = this
+			this.custList.push({
+				...custInfo,
+				start: this.$filter.formatDate(startTime),
+				end: this.$filter.formatDate(endTime),
+				stay: this.$filter.formatTime(time),
 			})
 		},
 	}
@@ -320,12 +324,7 @@ export default {
 					font-size: 18px;
 					font-weight: 700;
 					color: #1D1D1D;
-				}
-				& > div:last-child {
-					font-family: PingFangSC, PingFangSC-Regular;
-					font-size: 12px;
-					color: #757575;
-				}				
+				}		
 			}
 			.header-info_time {
 				font-family: SFUIDisplay, SFUIDisplay-Regular;

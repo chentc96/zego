@@ -18,14 +18,14 @@
 				<div class="tc-popup-btn" v-if="mode === 'center'">
 					<div
 						class="tc-popup_cancel"
-						v-if="cancelText"
-						@click="cancel"
-					>{{cancelText}}</div>
+						v-if="cancel"
+						@click="onCancel"
+					>{{cancel}}</div>
 					<div
 						class="tc-popup_confirm"
-						v-if="confirmText"
-						@click="confirm"
-					>{{confirmText}}</div>
+						v-if="confirm"
+						@click="onConfirm"
+					>{{confirm}}</div>
 				</div>
 			</div>
 			<div class="tc-popup-mask" @click="mask && $emit('input', false)"></div>
@@ -40,45 +40,27 @@
 			value: Boolean,
 			mask: Boolean,
 			close: Boolean,
+			title: String,
 			msg: String,
+			cancel: String,
+			confirm: String,
 			mode: {
 				type: String,
 				default: 'center' // sticky bottom center
 			},
-			title: {
-				type: String / Boolean,
-				default: '提示'
-			},
-			cancelText: {
-				type: String / Boolean,
-				default: '取消'
-			},
-			confirmText: {
-				type: String / Boolean,
-				default: '确定'
-			},
-		},
-		data () {
-			return {
-				modeClass: 'fade'
-			}
-		},
-		created () {
-			let { mode } = this
-			if (mode === 'bottom') {
-				this.modeClass = 'slide-bottom'
-			} else if (mode === 'sticky') {
-				this.modeClass = 'slide-top'
-			}
 		},
 		methods: {
-			cancel () {
+			onClose (flag) {
 				this.$emit('input', false)
-				this.$emit('cancel')
+				this.$emit('close', flag)
 			},
-			confirm () {
+			onConfirm () {
 				this.$emit('input', false)
 				this.$emit('confirm')
+			},
+			onCancel () {
+				this.$emit('input', false)
+				this.$emit('cancel')
 			},
 		}
 	}
@@ -115,7 +97,7 @@
 		}
 		.tc-popup_tit {
 			font-family: SFUIDisplay, SFUIDisplay-Bold;
-			font-size: 18px;
+			font-size: 16px;
 			font-weight: 700;
 			padding: 10px 0 10px 4px;
 			width: 94%;
@@ -136,7 +118,7 @@
 			font-size: 14px;
 			font-weight: 600;
 			text-align: center;
-			margin-bottom: 38px;
+			margin-bottom: 22px;
 			& > div {
 				cursor: pointer;
 				box-sizing: border-box;
@@ -146,7 +128,7 @@
 				border-radius: 4px;
 			}
 			.tc-popup_cancel {
-				background-image: linear-gradient(90deg,#e2c88d, #ad874e);
+				background-image: linear-gradient(90deg, #e2c88d, #ad874e);
 			}
 			.tc-popup_confirm {
 				border: 2px solid #979797;

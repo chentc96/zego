@@ -196,6 +196,7 @@ export default {
 					this.show = true
 				} else if (updateType === 'DELETE') {
 					// 用户减少
+					this.pushStream(false)
 					this.updateRoom({
 						count: 'reduce',
 						user_id: userInfo.userID,
@@ -220,11 +221,6 @@ export default {
 				return
 			}
 			this.pushStream(true)
-			this.updateRoom({
-				count: 'add',
-				user_id: custInfo.userID,
-				user_name: custInfo.userName,
-			})
 		},
 		onMute (flag) {
 			var { zg } = this
@@ -260,12 +256,14 @@ export default {
 		},
 		updateRoom (data) {
 			console.log('开始更新房间')
+			var { token } = this
 			var { roomID, userID, userName } = this.info
 			return this.$http.updateRoom({
 				room_id: roomID,
 				user_id: userID,
 				user_name: userName,
 				...data,
+				token,
 			})
 		},
 		sendCommand (code) {

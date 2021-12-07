@@ -22,7 +22,7 @@ var info = {
 	roomID: '',
 	userID: '',
 	userName: '',
-	videoCodec: 'VP8',
+	videoCodec: 'H264',
 }
 
 async function init (data) {

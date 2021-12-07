@@ -26,7 +26,7 @@
 							:disabled="v.status !== 1"
 							:image="require('@/assets/img/serve.png')"
 							size="40" align="bottom"
-							@click="verify(v)"
+							@click="updateRoom(v)"
 						>
 							<div class="cim-list_item">
 								<div>{{v.username}}</div>
@@ -130,12 +130,13 @@ export default {
 				this.roomList = res
 			})
 		},
-		verify (data) {
-			console.log('开始校验信息')
+		updateRoom (data) {
+			console.log('开始进入房间')
 			var { token } = this
 			var roomID = data.id
 			this.roomData = data
-			this.$http.verify({
+			return this.$http.updateRoom({
+				count: 'add',
 				room_id: roomID,
 				customer_token: token,
 			})

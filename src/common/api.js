@@ -1,9 +1,7 @@
 const host = window.location.hostname
-var baseURL = 'https://kf.v2.vr.api.taobao.top/'
-if (host.indexOf('cs') > -1) {
-	baseURL = 'https://cs.v2.vr.api.taobao.top/' // 测试环境
-} else if (host.indexOf('bitmine') > -1) {
-	baseURL = 'https://vr.api.bitmine.com/' // 生产环境
+var baseURL = 'https://kf.bitmineV3.vrapi.taobao.top/' // 开发环境
+if (host.indexOf('bitmine') > -1) {
+	baseURL = 'https://vr.api.bitmine.com/' // 正式环境
 }
 export default {
 	baseURL,

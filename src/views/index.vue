@@ -1,6 +1,6 @@
 <template>
   <div>
-		<iframe ref="iframe" :src="`${url}${mineId}/`"/>
+		<iframe ref="iframe" :src="`${url}${mineId}/index.html`"/>
 	</div>
 </template>
 

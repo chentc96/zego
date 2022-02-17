@@ -123,7 +123,7 @@ export default {
 			console.log('开始获取房间列表')
 			var { token, mineID } = this
 			this.$http.roomInfo({
-				mine_id: mineID,
+				mineId: mineID,
 				customer_token: token,
 			})
 			.then(res => {
@@ -137,15 +137,15 @@ export default {
 			this.roomData = data
 			return this.$http.updateRoom({
 				count: 'add',
-				room_id: roomID,
+				roomId: roomID,
 				customer_token: token,
 			})
 			.then(({ user }) => {
-				var { id, name } = user
+				var { userId, name } = user
 				this.info = {
-					roomID,
-					streamID: id,
-					userID: id,
+					roomID: String(roomID),
+					streamID: String(userId),
+					userID: String(userId),
 					userName: name,
 				}
 				this.init()

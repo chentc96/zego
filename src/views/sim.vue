@@ -121,16 +121,16 @@ export default {
 			console.log('开始校验信息')
 			var { token } = this
 			this.$http.verify({
-				room_id: roomID,
+				roomId: roomID,
 				token,
 			})
 			.then(({ user, mine }) => {
 				var { id, name } = user
 				this.mineInfo = mine
 				this.info = {
-					roomID,
-					streamID: id,
-					userID: id,
+					roomID: String(roomID),
+					streamID: String(id),
+					userID: String(id),
 					userName: name,
 				}
 				this.init()
@@ -199,8 +199,8 @@ export default {
 					this.pushStream(false)
 					this.updateRoom({
 						count: 'reduce',
-						user_id: userInfo.userID,
-						user_name: userInfo.userName,
+						userId: userInfo.userID,
+						userName: userInfo.userName,
 					})
 					this.custInfo = {}
 				}
@@ -259,9 +259,9 @@ export default {
 			var { token } = this
 			var { roomID, userID, userName } = this.info
 			return this.$http.updateRoom({
-				room_id: roomID,
-				user_id: userID,
-				user_name: userName,
+				roomId: roomID,
+				userId: userID,
+				userName: userName,
 				...data,
 				token,
 			})

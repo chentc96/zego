@@ -5,7 +5,6 @@ export default {
 	roomInfo (params) {
 		return request({
 			url: $api.roomInfo,
-			method: 'POST',
 			params,
 		}, {
 			hideLoad: true
